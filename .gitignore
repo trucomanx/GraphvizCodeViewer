@@ -1,2 +1,4 @@
 /src/graphviz_code_viewer/modules/__pycache__/
 /src/graphviz_code_viewer/__pycache__/
+/src/dist/
+/src/graphviz_code_viewer.egg-info/
