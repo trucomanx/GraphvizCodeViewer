@@ -17,6 +17,8 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QShortcut
+from PyQt5.QtGui import QKeySequence
 
 import graphviz_code_viewer.about as about
 import graphviz_code_viewer.modules.configure as configure 
@@ -285,6 +287,9 @@ class MainWindow(QMainWindow):
         
         if os.path.exists(self.input_filepath):
             self.load_dot(filepath=self.input_filepath)
+            
+        save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        save_shortcut.activated.connect(lambda: self.save_dot(from_input=True, exist_ok=True))
 
     def func_toolbar(self):
         toolbar = QToolBar()
