@@ -207,6 +207,10 @@ class TextEditor(QPlainTextEdit):
         self.setFont(QFont(CONFIG["font_name"], CONFIG["font_size"]))
         self.zoom_factor = 1.0
 
+        # Não quebrar linhas
+        self.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
         # Filtro de busca
         self.search_bar = QLineEdit(self)
         self.search_bar.setPlaceholderText("Buscar...")
