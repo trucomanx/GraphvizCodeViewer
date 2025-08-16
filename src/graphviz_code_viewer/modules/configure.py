@@ -15,10 +15,37 @@ def verify_default_config(path,default_content={}):
             json.dump(default_content, f, ensure_ascii=False, indent=4)
 
 
+
+def merge_defaults(config, defaults):
+    """
+    Adiciona valores de defaults que não existam em config.
+    Funciona recursivamente para dicionários aninhados.
+    """
+    for key, value in defaults.items():
+        if key not in config:
+            config[key] = value
+        elif isinstance(value, dict) and isinstance(config[key], dict):
+            merge_defaults(config[key], value)
+    return config
+
 # Lê o JSON no início do programa
-def load_config(config_path):
-    with open(config_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+def load_config(config_path, default_content=None):
+    """
+    Carrega o JSON de configuração e preenche com valores padrão se necessário.
+    """
+    config = {}
+    if os.path.exists(config_path):
+        with open(config_path, 'r', encoding='utf-8') as f:
+            try:
+                config = json.load(f)
+            except json.JSONDecodeError:
+                print("Erro ao ler config, usando defaults")
+                config = {}
+
+    if default_content:
+        config = merge_defaults(config, default_content)
+
+    return config
 
 def save_config(path,content):
     """

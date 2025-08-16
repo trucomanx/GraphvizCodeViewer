@@ -26,13 +26,11 @@ import graphviz_code_viewer.modules.configure as configure
 from graphviz_code_viewer.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
 from graphviz_code_viewer.modules.wabout import show_about_window
 
-
+# ------------------------------------------------------------------------------
 # Path to config file
 CONFIG_PATH = os.path.join(os.path.expanduser("~"),".config",about.__package__,"config.json")
 
 DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
-                    "font_size": 11,
-                    "font_name": "Monospace",
                     "window_width": 1200,
                     "window_height": 700,
                     "action_compile":"Compile",
@@ -45,8 +43,10 @@ DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
                     "action_saveas_tooltip": "Save the DOT file as",
                     "action_saveimg":"Save image",
                     "action_saveimg_tooltip": "Save the output image",
-                    "action_configure": "Configure",
-                    "action_configure_tooltip": "Open the configure Json file",
+                    "action_configure_window": "Conf. window",
+                    "action_configure_window_tooltip": "Open the configure window Json file",
+                    "action_configure_editor": "Conf. Editor",
+                    "action_configure_editor_tooltip": "Open the configure editor Json file",
                     "action_about": "About",
                     "action_about_tooltip": "About the program",
                     "action_coffee": "Coffee",
@@ -68,12 +68,35 @@ DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
                 }
 
 configure.verify_default_config(CONFIG_PATH,default_content=DEFAULT_CONTENT)
+CONFIG=configure.load_config(CONFIG_PATH,default_content=DEFAULT_CONTENT)
 
-CONFIG=configure.load_config(CONFIG_PATH)
+# ------------------------------------------------------------------------------
 
-# ---------------------------
+CONFIG_EDITOR_PATH = os.path.join(os.path.expanduser("~"),".config",about.__package__,"config_editor.json")
+
+DEFAULT_EDITOR_CONTENT= {   "font_size": 11,
+                            "font_name": "Monospace",
+                            "save_file": "Ctrl+S",
+                            "find_text": "Ctrl+F",
+                            "syntax_rules": {
+                                "digraph": {"color": "blue", "bold": True},
+                                "->": {"color": "darkRed", "bold": True},
+                                "=": {"color": "darkGreen", "bold": True},
+                                "\"": {"color": "darkMagenta", "bold": True},
+                                "[": {"color": "black", "bold": True},
+                                "]": {"color": "black", "bold": True},
+                                "{": {"color": "darkGreen", "bold": True},
+                                "}": {"color": "darkGreen", "bold": True},
+                                ";": {"color": "darkGray", "bold": True}
+                            }
+                        }
+
+configure.verify_default_config(CONFIG_EDITOR_PATH,default_content=DEFAULT_EDITOR_CONTENT)
+CONFIG_EDITOR=configure.load_config(CONFIG_EDITOR_PATH,default_content=DEFAULT_EDITOR_CONTENT)
+
+# ------------------------------------------------------------------------------
 # Syntax Highlighter
-# ---------------------------
+# ------------------------------------------------------------------------------
 class GraphvizHighlighter(QSyntaxHighlighter):
     def __init__(self, parent, rules_dict):
         super().__init__(parent)
@@ -93,9 +116,9 @@ class GraphvizHighlighter(QSyntaxHighlighter):
                 self.setFormat(index, length, fmt)
                 index = text.find(keyword, index + length)
 
-# ---------------------------
+# ------------------------------------------------------------------------------
 # Worker thread para compilar Graphviz
-# ---------------------------
+# ------------------------------------------------------------------------------
 class CompileThread(QThread):
     progress = pyqtSignal(int)
     finished = pyqtSignal(str, str)  # (output_file, error_message)
@@ -134,10 +157,9 @@ class CompileThread(QThread):
 
 
 
-# ---------------------------
+# ------------------------------------------------------------------------------
 # Widget da imagem com zoom/move
-# ---------------------------
-
+# ------------------------------------------------------------------------------
 
 class SvgViewer(QScrollArea):
     def __init__(self):
@@ -204,7 +226,7 @@ class SvgViewer(QScrollArea):
 class TextEditor(QPlainTextEdit):
     def __init__(self):
         super().__init__()
-        self.setFont(QFont(CONFIG["font_name"], CONFIG["font_size"]))
+        self.setFont(QFont(CONFIG_EDITOR["font_name"], CONFIG_EDITOR["font_size"]))
         self.zoom_factor = 1.0
 
         # Não quebrar linhas
@@ -234,10 +256,16 @@ class TextEditor(QPlainTextEdit):
             super().wheelEvent(event)
 
     def keyPressEvent(self, event):
-        # Ctrl+F ativa a busca
-        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_F:
+        # Cria a representação textual do atalho pressionado
+        key_seq = QKeySequence(event.modifiers() | event.key()).toString()
+
+        # Lê o atalho do seu config ou usa literal
+        search_shortcut = CONFIG_EDITOR["find_text"]
+
+        if key_seq == search_shortcut:
             self.toggle_search_bar()
             return
+
         super().keyPressEvent(event)
 
     def toggle_search_bar(self):
@@ -322,18 +350,8 @@ class MainWindow(QMainWindow):
         
         # Editor e visualizador
         self.editor = TextEditor()
-        syntax_rules = {
-            "digraph": {"color": "blue", "bold": True},
-            "->": {"color": "darkRed", "bold": True},
-            "=": {"color": "darkGreen", "bold": True},
-            "\"": {"color": "darkMagenta", "bold": True},
-            "[": {"color": "black", "bold": True},
-            "]": {"color": "black", "bold": True},
-            "{": {"color": "darkGreen", "bold": True},
-            "}": {"color": "darkGreen", "bold": True},
-            ";": {"color": "darkGray", "bold": True}
-        }
-        self.highlighter = GraphvizHighlighter(self.editor.document(), syntax_rules)
+
+        self.highlighter = GraphvizHighlighter(self.editor.document(), CONFIG_EDITOR["syntax_rules"])
         self.viewer = SvgViewer()
 
         splitter = QSplitter(Qt.Horizontal)
@@ -356,7 +374,7 @@ class MainWindow(QMainWindow):
         if os.path.exists(self.input_filepath):
             self.load_dot(filepath=self.input_filepath)
             
-        save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        save_shortcut = QShortcut(QKeySequence(CONFIG_EDITOR["save_file"]), self)
         save_shortcut.activated.connect(lambda: self.save_dot(from_input=True, exist_ok=True))
 
     def func_toolbar(self):
@@ -402,9 +420,15 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(spacer)
         
         # 
-        self.configure_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["action_configure"], self)
-        self.configure_action.setToolTip(CONFIG["action_configure_tooltip"])
-        self.configure_action.triggered.connect(self.open_configure_editor)
+        self.configure_editor_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["action_configure_editor"], self)
+        self.configure_editor_action.setToolTip(CONFIG["action_configure_editor_tooltip"])
+        self.configure_editor_action.triggered.connect(self.open_configure_editor)
+        toolbar.addAction(self.configure_editor_action)
+        
+        # 
+        self.configure_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["action_configure_window"], self)
+        self.configure_action.setToolTip(CONFIG["action_configure_window_tooltip"])
+        self.configure_action.triggered.connect(self.open_configure_window)
         toolbar.addAction(self.configure_action)
         
         #
@@ -423,6 +447,12 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl("https://ko-fi.com/trucomanx"))
     
     def open_configure_editor(self):
+        if os.name == 'nt':  # Windows
+            os.startfile(CONFIG_PATH)
+        elif os.name == 'posix':  # Linux/macOS
+            subprocess.run(['xdg-open', CONFIG_EDITOR_PATH])
+            
+    def open_configure_window(self):
         if os.name == 'nt':  # Windows
             os.startfile(CONFIG_PATH)
         elif os.name == 'posix':  # Linux/macOS
