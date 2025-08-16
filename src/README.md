@@ -2,7 +2,7 @@
 
 Program to edit and view Graphviz code.
 
-![logo](screenshot.png)
+![logo](https://raw.githubusercontent.com/trucomanx/GraphvizCodeViewer/main/screenshot.png)
 
 ## 1. Installing
 
@@ -24,7 +24,7 @@ graphviz-code-viewer
 ```
 ## 2. More information
 
-If you want more information go to [doc](https://github.com/trucomanx/GraphvizCodeViewer/blob/main/doc) directory
+If you want more information go to [doc](https://github.com/trucomanx/GraphvizCodeViewer/blob/main/doc) directory.
 
 ## 3. Buy me a coffee
 
