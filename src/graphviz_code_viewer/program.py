@@ -9,7 +9,7 @@ import shutil
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPlainTextEdit, QLabel, QSplitter, QToolBar,
-    QAction, QVBoxLayout, QWidget, QProgressBar, QFileDialog, QScrollArea, QMessageBox, QSizePolicy
+    QAction, QVBoxLayout, QWidget, QProgressBar, QFileDialog, QScrollArea, QMessageBox, QSizePolicy, QLineEdit
 )
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QPixmap, QIcon, QDesktopServices
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl
@@ -18,7 +18,8 @@ from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QShortcut
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QTextDocument
+
 
 import graphviz_code_viewer.about as about
 import graphviz_code_viewer.modules.configure as configure 
@@ -31,7 +32,7 @@ CONFIG_PATH = os.path.join(os.path.expanduser("~"),".config",about.__package__,"
 
 DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
                     "font_size": 11,
-                    "font_name": "Courier",
+                    "font_name": "Monospace",
                     "window_width": 1200,
                     "window_height": 700,
                     "action_compile":"Compile",
@@ -206,6 +207,17 @@ class TextEditor(QPlainTextEdit):
         self.setFont(QFont(CONFIG["font_name"], CONFIG["font_size"]))
         self.zoom_factor = 1.0
 
+        # Filtro de busca
+        self.search_bar = QLineEdit(self)
+        self.search_bar.setPlaceholderText("Buscar...")
+        self.search_bar.setFixedHeight(24)
+        self.search_bar.hide()
+        self.search_bar.textChanged.connect(self.highlight_search)
+        self.search_bar.installEventFilter(self)  # Para capturar Enter/Esc na barra
+
+        self.search_format = QTextCharFormat()
+        self.search_format.setBackground(QColor("yellow"))
+
     def wheelEvent(self, event):
         if event.modifiers() & Qt.ControlModifier:
             angle = event.angleDelta().y()
@@ -216,6 +228,58 @@ class TextEditor(QPlainTextEdit):
             self.setFont(font)
         else:
             super().wheelEvent(event)
+
+    def keyPressEvent(self, event):
+        # Ctrl+F ativa a busca
+        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_F:
+            self.toggle_search_bar()
+            return
+        super().keyPressEvent(event)
+
+    def toggle_search_bar(self):
+        if self.search_bar.isVisible():
+            self.search_bar.hide()
+            self.setFocus()
+            self.highlight_search("")  # remove highlights
+        else:
+            self.search_bar.show()
+            self.search_bar.setFocus()
+
+    def highlight_search(self, text):
+        # Remove highlights anteriores
+        cursor = self.textCursor()
+        fmt_clear = QTextCharFormat()
+        cursor.select(cursor.Document)
+        cursor.setCharFormat(fmt_clear)
+        cursor.clearSelection()
+
+        if not text:
+            return
+
+        # Aplicar destaque
+        cursor = self.document().find(text, 0, QTextDocument.FindCaseSensitively)
+        while not cursor.isNull():
+            cursor.mergeCharFormat(self.search_format)
+            cursor = self.document().find(text, cursor.position(), QTextDocument.FindCaseSensitively)
+
+    def eventFilter(self, obj, event):
+        if hasattr(self, "search_bar") and obj == self.search_bar:
+            if event.type() == event.KeyPress:
+                if event.key() == Qt.Key_Escape:
+                    self.toggle_search_bar()
+                    return True  # consome o evento
+                elif event.key() in (Qt.Key_Return, Qt.Key_Enter):
+                    # Seleciona próxima ocorrência
+                    text = self.search_bar.text()
+                    if text:
+                        cursor = self.textCursor()
+                        pos = cursor.position()
+                        next_cursor = self.document().find(text, pos, QTextDocument.FindCaseSensitively)
+                        if not next_cursor.isNull():
+                            self.setTextCursor(next_cursor)
+                    return True
+        return super().eventFilter(obj, event)
+
 
 # ---------------------------
 # Main Window
@@ -257,7 +321,7 @@ class MainWindow(QMainWindow):
         syntax_rules = {
             "digraph": {"color": "blue", "bold": True},
             "->": {"color": "darkRed", "bold": True},
-            "=": {"color": "darkRed", "bold": True},
+            "=": {"color": "darkGreen", "bold": True},
             "\"": {"color": "darkMagenta", "bold": True},
             "[": {"color": "black", "bold": True},
             "]": {"color": "black", "bold": True},
