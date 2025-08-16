@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import os
 import signal
+import shutil
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPlainTextEdit, QLabel, QSplitter, QToolBar,
@@ -94,7 +95,7 @@ class GraphvizHighlighter(QSyntaxHighlighter):
 # ---------------------------
 class CompileThread(QThread):
     progress = pyqtSignal(int)
-    finished = pyqtSignal(str)
+    finished = pyqtSignal(str, str)  # (output_file, error_message)
 
     def __init__(self, dot_code, output_file):
         super().__init__()
@@ -111,18 +112,23 @@ class CompileThread(QThread):
         with open(tmp_dot, "w") as f:
             f.write(self.dot_code)
         self.progress.emit(50)
+
         try:
-            subprocess.run(
+            result = subprocess.run(
                 ["dot", "-Tsvg", tmp_dot, "-o", self.output_file],
-                check=True
+                check=True,
+                capture_output=True,
+                text=True
             )
             self.progress.emit(100)
-            self.finished.emit(self.output_file)
-        except subprocess.CalledProcessError:
-            self.finished.emit("")
-            
-        if os.path.exists(tmp_dot):
-            os.remove(tmp_dot)
+            self.finished.emit(self.output_file, "")  # sucesso, sem erro
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr if e.stderr else "Erro desconhecido ao rodar o Graphviz"
+            self.finished.emit("", error_msg)
+        finally:
+            if os.path.exists(tmp_dot):
+                os.remove(tmp_dot)
+
 
 
 # ---------------------------
@@ -392,7 +398,10 @@ class MainWindow(QMainWindow):
             pixmap.save(path, "PNG")
         else:  # SVG
             # Copia o arquivo temporário para o destino
-            import shutil
+
+            
+            if not path.lower().endswith(".svg"):
+                path = path + ".svg"
             shutil.copyfile(self.temp_svg_path, path)
 
         self.status.showMessage(CONFIG["image_save_in"]+" "+path, 5000)
@@ -452,6 +461,8 @@ class MainWindow(QMainWindow):
                 self.status.showMessage(CONFIG["saved_file"]+" "+path, 5000)
         except Exception as e:
             QMessageBox.critical(self, CONFIG["erro"], CONFIG["error_saving_file"]+"\n"+ e)
+        
+        self.input_filepath = str(path)
             
     def compile_dot(self):
         dot_code = self.editor.toPlainText()
@@ -462,12 +473,13 @@ class MainWindow(QMainWindow):
         self.thread.finished.connect(self.show_image)
         self.thread.start()
 
-    def show_image(self, path):
-        if path:
-            self.viewer.load_image(path)
+    def show_image(self, path, error_msg):
+        if error_msg:  # deu erro
+            QMessageBox.critical(None, CONFIG["error_compilation"], error_msg)
         else:
-            print(CONFIG["error_compilation"])
-
+            if path:
+                self.viewer.load_image(path)
+        self.progress.setValue(0)
 # ---------------------------
 # Run
 # ---------------------------
