@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "graphviz_code_viewer"
-version = "0.1.0"
+version = "0.1.1"
 description = "Program to edit and view Graphviz code."
 readme = "README.md"
 authors = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]

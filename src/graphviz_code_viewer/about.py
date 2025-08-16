@@ -1,6 +1,6 @@
 # about.py
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __package__ = "graphviz_code_viewer"
 __program_name__ = "graphviz-code-viewer"
 __author__ = "Fernando Pujaico Rivera" 
