@@ -25,6 +25,7 @@ import graphviz_code_viewer.about as about
 import graphviz_code_viewer.modules.configure as configure 
 from graphviz_code_viewer.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
 from graphviz_code_viewer.modules.wabout import show_about_window
+from graphviz_code_viewer.modules.resources import resource_path
 
 # ------------------------------------------------------------------------------
 # Path to config file
@@ -370,8 +371,7 @@ class MainWindow(QMainWindow):
 
         ## Icon
         # Get base directory for icons
-        base_dir_path = os.path.dirname(os.path.abspath(__file__))
-        self.icon_path = os.path.join(base_dir_path, 'icons', 'logo.png')
+        self.icon_path = resource_path("icons", "logo.png")
         self.setWindowIcon(QIcon(self.icon_path)) 
         
 

@@ -1,0 +1,118 @@
+name: CI/CD PyInstaller Build
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================================
+  # BUILD JOB (LINUX + WINDOWS)
+  # ============================================================
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            name: linux
+          - os: windows-latest
+            name: windows
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-xinerama0 \
+            libxkbcommon-x11-0 \
+            libxcb-cursor0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-xfixes0 \
+            libx11-xcb1 \
+            libglib2.0-0 \
+            libgl1 \
+            libegl1
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pyinstaller-hooks-contrib
+          pip install -r requirements.txt
+
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          cd src
+          python -m PyInstaller --onefile --windowed \
+            --name graphviz_code_viewer \
+            --add-data "graphviz_code_viewer/icons:icons" \
+            --collect-all PyQt5 \
+            program_launcher.py
+
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          cd src
+          python -m PyInstaller --onefile --windowed `
+            --name graphviz_code_viewer `
+            --add-data "graphviz_code_viewer/icons;icons" `
+            --collect-all PyQt5 `
+            program_launcher.py
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.name }}
+          path: src/dist/
+          retention-days: 1
+
+  # ============================================================
+  # RELEASE JOB (ÚNICO)
+  # ============================================================
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts (debug)
+        run: ls -R artifacts
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

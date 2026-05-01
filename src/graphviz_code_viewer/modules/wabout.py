@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
+import os
                             
 class AboutWindow(QDialog):
     """About dialog window"""
@@ -14,9 +15,12 @@ class AboutWindow(QDialog):
         
         # Logo
         logo_label = QLabel()
-        pixmap = QPixmap(logo_path)
-        pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        logo_label.setPixmap(pixmap)
+        if os.path.exists(logo_path):
+            pixmap = QPixmap(logo_path)
+            pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            logo_label.setPixmap(pixmap)
+        else:
+            logo_label.setText(logo_path)
         logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label)
         
