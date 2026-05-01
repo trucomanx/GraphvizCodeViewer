@@ -8,7 +8,7 @@ import signal
 import shutil
 
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QPlainTextEdit, QLabel, QSplitter, QToolBar,
+    QApplication, QMainWindow, QPlainTextEdit, QLabel, QSplitter, QToolBar, QHBoxLayout,
     QAction, QVBoxLayout, QWidget, QProgressBar, QFileDialog, QScrollArea, QMessageBox, QSizePolicy, QLineEdit
 )
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QPixmap, QIcon, QDesktopServices
@@ -381,6 +381,23 @@ class MainWindow(QMainWindow):
         # Criar status bar 
         self.status = self.statusBar()
         
+        
+        # --- File path bar ---
+        self.file_label = QLabel("file path:")
+        self.file_path_edit = QLineEdit()
+        self.file_path_edit.setReadOnly(True)
+
+        file_bar = QWidget()
+        file_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        #file_bar.setMaximumHeight(28)
+        file_layout = QHBoxLayout()
+        file_layout.setContentsMargins(5, 2, 5, 2)
+
+        file_layout.addWidget(self.file_label)
+        file_layout.addWidget(self.file_path_edit)
+
+        file_bar.setLayout(file_layout)
+        
         # Editor e visualizador
         self.editor = TextEditor()
 
@@ -399,6 +416,7 @@ class MainWindow(QMainWindow):
         # Layout central
         central = QWidget()
         layout = QVBoxLayout()
+        layout.addWidget(file_bar)   # 🔥 NOVO (logo abaixo da toolbar)
         layout.addWidget(splitter)
         layout.addWidget(self.progress)
         central.setLayout(layout)
@@ -410,6 +428,9 @@ class MainWindow(QMainWindow):
         save_shortcut = QShortcut(QKeySequence(CONFIG_EDITOR["save_file"]), self)
         save_shortcut.activated.connect(lambda: self.save_dot(from_input=True, exist_ok=True))
 
+    def update_filepath_ui(self):
+        self.file_path_edit.setText(self.input_filepath if self.input_filepath else "")
+        
     def func_toolbar(self):
         toolbar = QToolBar()
         self.addToolBar(toolbar)
@@ -560,6 +581,7 @@ class MainWindow(QMainWindow):
                     content = f.read()
                     self.editor.setPlainText(content)  # carrega o conteúdo no QPlainTextEdit
                     self.input_filepath=str(filepath)
+                    self.update_filepath_ui()
                     self.status.showMessage(CONFIG["loaded_file"]+" "+self.input_filepath, 5000)
             except Exception as e:
                 print(CONFIG["error_opening_dot_file"]+f"{e}")
@@ -599,6 +621,8 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, CONFIG["erro"], CONFIG["error_saving_file"]+"\n"+ e)
         
         self.input_filepath = str(path)
+        
+        self.update_filepath_ui()
             
     def compile_dot(self):
         dot_code = self.editor.toPlainText()
