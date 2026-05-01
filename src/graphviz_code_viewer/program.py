@@ -51,6 +51,7 @@ DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
                     "action_about_tooltip": "About the program",
                     "action_coffee": "Coffee",
                     "action_coffee_tooltip": "Buy me a coffee (TrucomanX)",
+                    "file_path": "File path:",
                     "warning":"Warning",
                     "no_image_available":"No image available to save. Compile the code first.",
                     "save_image":"Save image",
@@ -383,7 +384,7 @@ class MainWindow(QMainWindow):
         
         
         # --- File path bar ---
-        self.file_label = QLabel("file path:")
+        self.file_label = QLabel(CONFIG["file_path"])
         self.file_path_edit = QLineEdit()
         self.file_path_edit.setReadOnly(True)
 
@@ -427,6 +428,26 @@ class MainWindow(QMainWindow):
             
         save_shortcut = QShortcut(QKeySequence(CONFIG_EDITOR["save_file"]), self)
         save_shortcut.activated.connect(lambda: self.save_dot(from_input=True, exist_ok=True))
+
+        if not self.check_graphviz():
+            sys.exit(1)  # encerra o app se não tiver dot
+
+    def check_graphviz(self):
+        dot_path = shutil.which("dot")
+
+        if dot_path is None:
+            QMessageBox.critical(
+                self,
+                "Graphviz not found",
+                "The executable 'dot' (Graphviz) was not found on the system.\n\n"
+                "Install Graphviz and make sure the 'dot' command is in the PATH.\n\n"
+                "Example:\n"
+                "  Linux: sudo apt install graphviz\n"
+                "  Windows: add Graphviz to PATH\n"
+            )
+            return False
+
+        return True
 
     def update_filepath_ui(self):
         self.file_path_edit.setText(self.input_filepath if self.input_filepath else "")
