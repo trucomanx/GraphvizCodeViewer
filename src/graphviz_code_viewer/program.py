@@ -244,6 +244,39 @@ class TextEditor(QPlainTextEdit):
         self.search_format = QTextCharFormat()
         self.search_format.setBackground(QColor("yellow"))
 
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        mime = event.mimeData()
+
+        if mime.hasUrls():
+            for url in mime.urls():
+                path = url.toLocalFile()
+
+                if os.path.isfile(path):
+                    try:
+                        # Tenta abrir como texto
+                        with open(path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        #self.insertPlainText(content)
+                        self.setPlainText(content)
+                    except Exception:
+                        # Se falhar (provável binário), insere o path
+                        #self.insertPlainText(path)
+                        self.setPlainText(path)
+                else:
+                    self.insertPlainText(path)
+
+            event.acceptProposedAction()
+        else:
+            super().dropEvent(event)
+
     def wheelEvent(self, event):
         if event.modifiers() & Qt.ControlModifier:
             angle = event.angleDelta().y()
