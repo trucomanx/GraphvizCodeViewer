@@ -42,7 +42,7 @@ DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
                     "action_saveas":"Save as",
                     "action_saveas_tooltip": "Save the DOT file as",
                     "action_saveimg":"Save image",
-                    "action_saveimg_tooltip": "Save the output image",
+                    "action_saveimg_tooltip": "Save the output as binary or vector image (SVG,PNG,PDF)",
                     "action_configure_window": "Conf. window",
                     "action_configure_window_tooltip": "Open the configure window Json file",
                     "action_configure_editor": "Conf. Editor",
@@ -533,12 +533,19 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, CONFIG["warning"], CONFIG["no_image_available"])
             return
 
+        # Nome sugerido baseado no .dot
+        if self.input_filepath:
+            base = os.path.splitext(os.path.basename(self.input_filepath))[0]
+            default_name = base + ".svg"
+        else:
+            default_name = "graph.svg"
+
         # Pergunta onde salvar
         path, _ = QFileDialog.getSaveFileName(
             self,
             CONFIG["save_image"],
-            "",
-            "SVG File (*.svg);;PNG File (*.png)"
+            default_name,
+            "SVG File (*.svg);;PNG File (*.png);;PDF File (*.pdf)"
         )
 
         if not path:
@@ -553,6 +560,27 @@ class MainWindow(QMainWindow):
             self.viewer.renderer.render(painter)
             painter.end()
             pixmap.save(path, "PNG")
+            
+        elif path.lower().endswith(".pdf"):
+            # gerar PDF diretamente com graphviz (vetorial real)
+            dot_code = self.editor.toPlainText()
+
+            temp_dot = tempfile.NamedTemporaryFile(delete=False, suffix=".dot")
+            tmp_dot_path = temp_dot.name
+            temp_dot.close()
+
+            with open(tmp_dot_path, "w") as f:
+                f.write(dot_code)
+
+            try:
+                subprocess.run(
+                    ["dot", "-Tpdf", tmp_dot_path, "-o", path],
+                    check=True
+                )
+            finally:
+                if os.path.exists(tmp_dot_path):
+                    os.remove(tmp_dot_path)
+            
         else:  # SVG
             # Copia o arquivo temporário para o destino
 
