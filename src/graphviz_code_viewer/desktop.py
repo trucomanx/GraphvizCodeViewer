@@ -16,7 +16,7 @@ def update_desktop_database(desktop_path):
     except FileNotFoundError:
         print("The command 'update-desktop-database' was not found. Verify that the package 'desktop-file-utils' is installed.")
 
-def create_desktop_file(desktop_path, overwrite=False):
+def create_desktop_file(desktop_path, overwrite=False, extras=""):
     base_dir_path = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(base_dir_path, 'icons', 'logo.png')
 
@@ -25,7 +25,7 @@ def create_desktop_file(desktop_path, overwrite=False):
     desktop_entry = f"""[Desktop Entry]
 Name={about.__program_name__}
 Comment={about.__description__}
-Exec={script_path}
+Exec={script_path} %f
 Terminal=false
 Type=Application
 Icon={icon_path}
@@ -34,6 +34,7 @@ Categories=Education;ResearchTools;
 Keywords=organizer;python;
 Encoding=UTF-8
 StartupWMClass={about.__package__}
+{extras}
 """
     path = os.path.expanduser(os.path.join(desktop_path,f"{about.__program_name__}.desktop"))
     

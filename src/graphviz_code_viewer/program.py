@@ -695,22 +695,24 @@ class MainWindow(QMainWindow):
 def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     
+    extras="MimeType=text/vnd.graphviz;"
+    
     create_desktop_directory()    
     create_desktop_menu()
-    create_desktop_file('~/.local/share/applications')
+    create_desktop_file('~/.local/share/applications', extras=extras)
     
     filepath = ""
     if(len(sys.argv)==2):
         if sys.argv[1] == "--autostart":
             create_desktop_directory(overwrite = True)
             create_desktop_menu(overwrite = True)
-            create_desktop_file('~/.config/autostart', overwrite=True)
+            create_desktop_file('~/.config/autostart', overwrite=True, extras=extras)
             return
             
         if sys.argv[1] == "--applications":
             create_desktop_directory(overwrite = True)
             create_desktop_menu(overwrite = True)
-            create_desktop_file('~/.local/share/applications', overwrite=True)
+            create_desktop_file('~/.local/share/applications', overwrite=True, extras=extras)
             return
 
         if os.path.exists(sys.argv[1]):
@@ -720,12 +722,12 @@ def main():
             if sys.argv[n] == "--autostart":
                 create_desktop_directory(overwrite = True)
                 create_desktop_menu(overwrite = True)
-                create_desktop_file('~/.config/autostart', overwrite=True)
+                create_desktop_file('~/.config/autostart', overwrite=True, extras=extras)
                 return
             if sys.argv[n] == "--applications":
                 create_desktop_directory(overwrite = True)
                 create_desktop_menu(overwrite = True)
-                create_desktop_file('~/.local/share/applications', overwrite=True)
+                create_desktop_file('~/.local/share/applications', overwrite=True, extras=extras)
                 return
 
     app = QApplication(sys.argv)
