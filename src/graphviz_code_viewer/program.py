@@ -459,31 +459,41 @@ class MainWindow(QMainWindow):
         
         
         # Compile
-        compile_action = QAction(QIcon.fromTheme("media-playback-start"),CONFIG["action_compile"], self)
+        compile_action = QAction(   QIcon(resource_path("icons", "system-run.png")),
+                                    CONFIG["action_compile"], 
+                                    self)
         compile_action.setToolTip(CONFIG["action_compile_tooltip"])
         compile_action.triggered.connect(self.compile_dot)
         toolbar.addAction(compile_action)
         
         # Load
-        load_action = QAction(QIcon.fromTheme("document-open"),CONFIG["action_open"], self)
+        load_action = QAction(  QIcon(resource_path("icons", "document-open.png")),
+                                CONFIG["action_open"], 
+                                self)
         load_action.setToolTip(CONFIG["action_open_tooltip"])
         load_action.triggered.connect(lambda: self.load_dot(filepath=""))
         toolbar.addAction(load_action)
         
         # Save
-        save_action = QAction(QIcon.fromTheme("document-save"),CONFIG["action_save"], self)
+        save_action = QAction(  QIcon(resource_path("icons", "download.png")),
+                                CONFIG["action_save"], 
+                                self)
         save_action.setToolTip(CONFIG["action_save_tooltip"])
         save_action.triggered.connect(lambda: self.save_dot(from_input=True,exist_ok=True))
         toolbar.addAction(save_action)
 
         # Save as
-        saveas_action = QAction(QIcon.fromTheme("document-save-as"),CONFIG["action_saveas"], self)
+        saveas_action = QAction(QIcon(resource_path("icons", "download-green.png")),
+                                CONFIG["action_saveas"], 
+                                self)
         saveas_action.setToolTip(CONFIG["action_saveas_tooltip"])
         saveas_action.triggered.connect(lambda: self.save_dot(from_input=False,exist_ok=False))
         toolbar.addAction(saveas_action)
         
         # Save Image
-        save_image_action = QAction(QIcon.fromTheme("image-x-generic"), CONFIG["action_saveimg"], self)
+        save_image_action = QAction(QIcon(resource_path("icons", "image.png")), 
+                                    CONFIG["action_saveimg"], 
+                                    self)
         save_image_action.setToolTip(CONFIG["action_saveimg_tooltip"])
         save_image_action.triggered.connect(self.save_image)
         toolbar.addAction(save_image_action)
@@ -495,25 +505,33 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(spacer)
         
         # 
-        self.configure_editor_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["action_configure_editor"], self)
+        self.configure_editor_action = QAction( QIcon(resource_path("icons", "text-configure.png")), 
+                                                CONFIG["action_configure_editor"], 
+                                                self)
         self.configure_editor_action.setToolTip(CONFIG["action_configure_editor_tooltip"])
         self.configure_editor_action.triggered.connect(self.open_configure_editor)
         toolbar.addAction(self.configure_editor_action)
         
         # 
-        self.configure_action = QAction(QIcon.fromTheme("document-properties"), CONFIG["action_configure_window"], self)
+        self.configure_action = QAction(QIcon(resource_path("icons", "text-configure.png")), 
+                                        CONFIG["action_configure_window"], 
+                                        self)
         self.configure_action.setToolTip(CONFIG["action_configure_window_tooltip"])
         self.configure_action.triggered.connect(self.open_configure_window)
         toolbar.addAction(self.configure_action)
         
         #
-        self.about_action = QAction(QIcon.fromTheme("help-about"), CONFIG["action_about"], self)
+        self.about_action = QAction(QIcon(resource_path("icons", "status_help.png")), 
+                                    CONFIG["action_about"], 
+                                    self)
         self.about_action.setToolTip(CONFIG["action_about_tooltip"])
         self.about_action.triggered.connect(self.open_about)
         toolbar.addAction(self.about_action)
         
         # Coffee
-        self.coffee_action = QAction(QIcon.fromTheme("emblem-favorite"), CONFIG["action_coffee"], self)
+        self.coffee_action = QAction(   QIcon(resource_path("icons", "emote-love.png")), 
+                                        CONFIG["action_coffee"], 
+                                        self)
         self.coffee_action.setToolTip(CONFIG["action_coffee_tooltip"])
         self.coffee_action.triggered.connect(self.on_coffee_action_click)
         toolbar.addAction(self.coffee_action)

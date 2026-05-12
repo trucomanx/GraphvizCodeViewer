@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "graphviz_code_viewer"
-version = "0.1.3"
+version = "0.1.4"
 description = "Program to edit and view Graphviz code."
 readme = "README.md"
 authors = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]
@@ -23,10 +23,10 @@ dependencies = [
 ]
 
 [project.urls]
-"Bug Reports" = "https://github.com/trucomanx/GraphvizCodeViewer/issues"
+"Bug Reports" = "https://github.com/trucomanx-desktop/GraphvizCodeViewer/issues"
 "Funding" = "https://trucomanx.github.io/en/funding.html"
-"Documentation" = "https://github.com/trucomanx/GraphvizCodeViewer/tree/main/doc"
-"Source" = "https://github.com/trucomanx/GraphvizCodeViewer"
+"Documentation" = "https://github.com/trucomanx-desktop/GraphvizCodeViewer/tree/main/doc"
+"Source" = "https://github.com/trucomanx-desktop/GraphvizCodeViewer"
 
 [project.scripts]
 "graphviz-code-viewer" = "graphviz_code_viewer.program:main"
@@ -35,4 +35,4 @@ dependencies = [
 packages = ["graphviz_code_viewer", "graphviz_code_viewer.modules"]
 
 [tool.setuptools.package-data]
-"graphviz_code_viewer" = ["icons/logo.png"]
+"graphviz_code_viewer" = ["icons/*.png"]

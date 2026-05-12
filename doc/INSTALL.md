@@ -21,7 +21,7 @@ graphviz-code-viewer
 Installing `graphviz-code-viewer` program
 
 ```bash
-git clone https://github.com/trucomanx/GraphvizCodeViewer.git
+git clone https://github.com/trucomanx-desktop/GraphvizCodeViewer.git
 cd GraphvizCodeViewer
 pip install -r requirements.txt
 cd src
