@@ -45,8 +45,7 @@ license = "GPL-3.0-only WITH Classpath-Exception-2.0 OR BSD-3-Clause"
 license-files = ["LICENSE"]
 keywords = ["writing", "translate"]
 dependencies = [
-    "PyQt5",
-    "deep-consultation"
+    "PyQt5"
 ]
 
 [project.urls]
@@ -62,7 +61,7 @@ dependencies = [
 packages = ["{__package__}", "{__package__}.modules"]
 
 [tool.setuptools.package-data]
-"{__package__}" = ["icons/*.png"]
+"{__package__}" = ["icons/*.png", "data/*.svg", "data/*.dot"]
 """
 
 # Escreve o pyproject.toml

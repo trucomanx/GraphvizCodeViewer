@@ -26,6 +26,7 @@ import graphviz_code_viewer.modules.configure as configure
 from graphviz_code_viewer.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
 from graphviz_code_viewer.modules.wabout import show_about_window
 from graphviz_code_viewer.modules.resources import resource_path
+from graphviz_code_viewer.modules.example_selector import open_window_example_selector
 
 # ------------------------------------------------------------------------------
 # Path to config file
@@ -44,6 +45,8 @@ DEFAULT_CONTENT={   "error_loading_svg": "Error loading SVG file",
                     "action_saveas_tooltip": "Save the DOT file as",
                     "action_saveimg":"Save image",
                     "action_saveimg_tooltip": "Save the output as binary or vector image (SVG,PNG,PDF)",
+                    "action_load_example": "Load example",
+                    "action_load_example_tooltip": "Select and load a example code",
                     "action_configure_window": "Conf. window",
                     "action_configure_window_tooltip": "Open the configure window Json file",
                     "action_configure_editor": "Conf. Editor",
@@ -78,6 +81,7 @@ CONFIG_EDITOR_PATH = os.path.join(os.path.expanduser("~"),".config",about.__pack
 
 DEFAULT_EDITOR_CONTENT= {   "font_size": 11,
                             "font_name": "Monospace",
+                            "tab_size": 4,
                             "save_file": "Ctrl+S",
                             "find_text": "Ctrl+F",
                             "syntax_rules": {
@@ -235,6 +239,9 @@ class TextEditor(QPlainTextEdit):
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
+        # tab
+        self.setTabStopDistance(CONFIG_EDITOR["tab_size"] * self.fontMetrics().horizontalAdvance(' '))
+
         # Filtro de busca
         self.search_bar = QLineEdit(self)
         self.search_bar.setPlaceholderText("Buscar...")
@@ -301,7 +308,19 @@ class TextEditor(QPlainTextEdit):
             self.toggle_search_bar()
             return
 
+        if event.key() == Qt.Key_Tab:
+            self.insertPlainText(CONFIG_EDITOR["tab_size"]*" ")  # 4 espaços
+            return
+
         super().keyPressEvent(event)
+
+    def insertFromMimeData(self, source):
+        text = source.text()
+
+        # converte TABs para espaços
+        text = text.replace("\t", " " * CONFIG_EDITOR["tab_size"])
+
+        self.insertPlainText(text)
 
     def toggle_search_bar(self):
         if self.search_bar.isVisible():
@@ -374,6 +393,7 @@ class MainWindow(QMainWindow):
         self.icon_path = resource_path("icons", "logo.png")
         self.setWindowIcon(QIcon(self.icon_path)) 
         
+        self.data_path = resource_path("data")
 
         # Toolbar
         self.func_toolbar()
@@ -501,8 +521,16 @@ class MainWindow(QMainWindow):
 
         # Adicionar o espaçador
         spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         toolbar.addWidget(spacer)
+
+        # 
+        self.load_example_action = QAction( QIcon(resource_path("icons", "image.png")), 
+                                                CONFIG["action_load_example"], 
+                                                self)
+        self.load_example_action.setToolTip(CONFIG["action_load_example_tooltip"])
+        self.load_example_action.triggered.connect(self.load_example)
+        toolbar.addAction(self.load_example_action)
         
         # 
         self.configure_editor_action = QAction( QIcon(resource_path("icons", "text-configure.png")), 
@@ -535,6 +563,7 @@ class MainWindow(QMainWindow):
         self.coffee_action.setToolTip(CONFIG["action_coffee_tooltip"])
         self.coffee_action.triggered.connect(self.on_coffee_action_click)
         toolbar.addAction(self.coffee_action)
+
 
     def on_coffee_action_click(self):
         QDesktopServices.openUrl(QUrl("https://ko-fi.com/trucomanx"))
@@ -574,7 +603,7 @@ class MainWindow(QMainWindow):
 
         # Nome sugerido baseado no .dot
         if self.input_filepath:
-            base = os.path.splitext(os.path.basename(self.input_filepath))[0]
+            base = os.path.splitext(self.input_filepath)[0]
             default_name = base + ".svg"
         else:
             default_name = "graph.svg"
@@ -635,10 +664,15 @@ class MainWindow(QMainWindow):
         
         if not os.path.exists(filepath):
             # Abre uma caixa de diálogo para selecionar arquivos .dot
+            filepath = os.path.abspath(self.file_path_edit.text())
+            directory = os.path.dirname(filepath)
+            if not os.path.isdir(directory):
+                directory = ""
+            
             filepath, _ = QFileDialog.getOpenFileName(
                 self,
                 CONFIG["open_dot_file"],
-                "",
+                directory,
                 CONFIG["dot_file_dot"]
             )
 
@@ -649,7 +683,9 @@ class MainWindow(QMainWindow):
                     self.editor.setPlainText(content)  # carrega o conteúdo no QPlainTextEdit
                     self.input_filepath=str(filepath)
                     self.update_filepath_ui()
+                    self.compile_dot()
                     self.status.showMessage(CONFIG["loaded_file"]+" "+self.input_filepath, 5000)
+
             except Exception as e:
                 print(CONFIG["error_opening_dot_file"]+f"{e}")
 
@@ -665,10 +701,15 @@ class MainWindow(QMainWindow):
 
         # Se path não foi fornecido ou não existe, abre diálogo para salvar
         if not path or len(path)==0:
+            filepath = os.path.abspath(self.file_path_edit.text())
+            directory = os.path.dirname(filepath)
+            if not os.path.isdir(directory):
+                directory = ""
+                
             path, _ = QFileDialog.getSaveFileName(
                 self,
                 CONFIG["save_dot_file"],
-                "",
+                directory,
                 CONFIG["dot_file_dot"]
             )
 
@@ -690,6 +731,20 @@ class MainWindow(QMainWindow):
         self.input_filepath = str(path)
         
         self.update_filepath_ui()
+       
+    def load_example(self):
+        content=""
+        example_path = open_window_example_selector(
+            dir_base=self.data_path,
+            parent=self
+        )
+        
+        if os.path.isfile(example_path):
+            with open(example_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        
+            self.editor.setPlainText(content)
+            self.compile_dot()
             
     def compile_dot(self):
         dot_code = self.editor.toPlainText()

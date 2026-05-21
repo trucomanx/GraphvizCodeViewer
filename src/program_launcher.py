@@ -18,10 +18,10 @@ cd src
 
 
 ## ubuntu ##
-python3 -m PyInstaller --onefile --windowed --name graphviz_code_viewer --add-data "graphviz_code_viewer/icons:icons" --collect-all PyQt5  program_launcher.py
+python3 -m PyInstaller --onefile --windowed --name graphviz_code_viewer --add-data "graphviz_code_viewer/data:data" --add-data "graphviz_code_viewer/icons:icons" --collect-all PyQt5  program_launcher.py
 
 ## windows ##
-python -m PyInstaller --onefile --windowed --name graphviz_code_viewer --add-data "graphviz_code_viewer/icons;icons" --collect-all PyQt5  program_launcher.py
+python -m PyInstaller --onefile --windowed --name graphviz_code_viewer --add-data "graphviz_code_viewer/data;data" --add-data "graphviz_code_viewer/icons;icons" --collect-all PyQt5  program_launcher.py
 
 '''
 
@@ -35,7 +35,5 @@ os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(
 from graphviz_code_viewer.program import main
 
 if __name__ == "__main__":
-    import os
-
     main()
 

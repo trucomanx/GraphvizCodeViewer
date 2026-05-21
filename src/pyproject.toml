@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "graphviz_code_viewer"
-version = "0.1.4"
+version = "0.1.5"
 description = "Program to edit and view Graphviz code."
 readme = "README.md"
 authors = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]
@@ -35,4 +35,4 @@ dependencies = [
 packages = ["graphviz_code_viewer", "graphviz_code_viewer.modules"]
 
 [tool.setuptools.package-data]
-"graphviz_code_viewer" = ["icons/*.png"]
+"graphviz_code_viewer" = ["icons/*.png", "data/*.svg", "data/*.dot"]

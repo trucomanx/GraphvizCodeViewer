@@ -1,0 +1,11 @@
+digraph TrafficLightStateMachine {
+    rankdir=LR;
+    node [shape = circle];
+
+    Red -> Green [label="timer"];
+    Green -> Yellow [label="timer"];
+    Yellow -> Red [label="timer"];
+
+    Start [shape=square];
+    Start -> Red;
+}

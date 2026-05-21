@@ -70,6 +70,7 @@ jobs:
           python -m PyInstaller --onefile --windowed \
             --name graphviz_code_viewer \
             --add-data "graphviz_code_viewer/icons:icons" \
+            --add-data "graphviz_code_viewer/data:data" \
             --collect-all PyQt5 \
             program_launcher.py
 
@@ -81,6 +82,7 @@ jobs:
           python -m PyInstaller --onefile --windowed `
             --name graphviz_code_viewer `
             --add-data "graphviz_code_viewer/icons;icons" `
+            --add-data "graphviz_code_viewer/data;data" `
             --collect-all PyQt5 `
             program_launcher.py
 

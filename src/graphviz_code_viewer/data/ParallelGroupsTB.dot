@@ -1,0 +1,36 @@
+digraph ParallelGroupsTB {
+    rankdir=TB;
+    compound=true;
+
+    node [shape=box];
+
+    Start -> Split;
+
+    Split -> LeftGroup_Start;
+    Split -> RightGroup_Start;
+
+    subgraph cluster_left {
+        label="Left Group";
+        style=rounded;
+
+        LeftGroup_Start -> LeftTask1;
+        LeftTask1 -> LeftTask2;
+        LeftTask2 -> LeftDone;
+    }
+
+    subgraph cluster_right {
+        label="Right Group";
+        style=rounded;
+
+        RightGroup_Start -> RightTask1;
+        RightTask1 -> RightTask2;
+        RightTask2 -> RightDone;
+    }
+
+    LeftDone -> Merge;
+    RightDone -> Merge;
+
+    Merge -> End;
+
+    End [shape=doublecircle];
+}

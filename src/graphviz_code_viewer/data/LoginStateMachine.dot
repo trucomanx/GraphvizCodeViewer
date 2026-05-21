@@ -1,0 +1,15 @@
+digraph LoginStateMachine {
+    rankdir=LR;
+
+    node [shape=circle];
+
+    LoggedOut -> LoggingIn [label="click login"];
+    LoggingIn -> Authenticated [label="success"];
+    LoggingIn -> Error [label="failure"];
+
+    Error -> LoggingIn [label="retry"];
+    Authenticated -> LoggedOut [label="logout"];
+
+    start [shape=square];
+    start -> LoggedOut;
+}
